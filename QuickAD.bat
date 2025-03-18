@@ -97,8 +97,18 @@ if /I "%resetChoice%"=="Y" (
                 echo Failed to reset password.
             )
         ) else (
-            echo Setting password change requirement to false...
-            powershell -NoProfile -Command "Set-ADUser -Identity '%username%' -ChangePasswordAtLogon $false"
+            if /I "%forceChoice%"=="y" (
+            echo Setting password change requirement to true...
+            powershell -NoProfile -Command "Set-ADUser -Identity '%username%' -ChangePasswordAtLogon $true"
+            if %errorlevel% EQU 0 (
+                echo User will be forced to change password at next logon.
+            ) else (
+                echo Failed to reset password.
+            )
+			) else (
+				echo Setting password change requirement to false...
+				powershell -NoProfile -Command "Set-ADUser -Identity '%username%' -ChangePasswordAtLogon $false"
+			)
         )
     ) else (
         echo Skipping password change!
