@@ -59,6 +59,9 @@ if "%noLockChoice%"=="1" (
 )
 
 :processAccount
+:: Convert the username to uppercase (works for both manual and menu selection)
+for /f "usebackq delims=" %%u in (`powershell -NoProfile -Command "'%username%'.ToUpper()"`) do set "username=%%u"
+
 echo.
 echo Processing account: %username%
 
@@ -87,33 +90,25 @@ if /I "%resetChoice%"=="Y" (
         echo Password reset successfully.
         echo.
         echo Would you like to force a password change on next logon for %username%? (Y/N)
-        set /p forceChoice="Enter Y to force password change, any other key to skip: "
-        if /I "%forceChoice%"=="Y" (
-            echo Setting password change requirement to true...
-            powershell -NoProfile -Command "Set-ADUser -Identity '%username%' -ChangePasswordAtLogon $true"
-            if %errorlevel% EQU 0 (
-                echo User will be forced to change password at next logon.
-            ) else (
-                echo Failed to reset password.
-            )
-        ) else (
-            if /I "%forceChoice%"=="y" (
-            echo Setting password change requirement to true...
-            powershell -NoProfile -Command "Set-ADUser -Identity '%username%' -ChangePasswordAtLogon $true"
-            if %errorlevel% EQU 0 (
-                echo User will be forced to change password at next logon.
-            ) else (
-                echo Failed to reset password.
-            )
+		set /p forceChoice=Enter Y to force password change, any other key to skip: 
+
+		if /I "!forceChoice!"=="Y" (
+			echo Setting password change requirement to true...
+			powershell -NoProfile -Command "Set-ADUser -Identity '%username%' -ChangePasswordAtLogon $true"
+			if !errorlevel! EQU 0 (
+				echo User will be forced to change password at next logon.
 			) else (
-				echo Setting password change requirement to false...
-				powershell -NoProfile -Command "Set-ADUser -Identity '%username%' -ChangePasswordAtLogon $false"
+				echo Failed to set password change requirement.
 			)
-        )
+		) else (
+			echo Setting password change requirement to false...
+			powershell -NoProfile -Command "Set-ADUser -Identity '%username%' -ChangePasswordAtLogon $false"
+		)
     ) else (
         echo Skipping password change!
     )
 )
+
 :skipReset
 
 :end
